@@ -1,0 +1,5 @@
+For k = 1, error rate was: 0.089
+For k = 2, error rate was: 0.104
+For k = 5, error rate was: 0.098
+For k = 10, error rate was: 0.12
+For k = 25, error rate was: 0.132
