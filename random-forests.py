@@ -20,7 +20,7 @@ class DecisionTree:
         self.right = tree
         return self.right
     def decision(self, feature):
-        if feature >= self.threshold:
+        if feature > self.threshold: #changed to less than
             return self.right
         return self.left
     @property
@@ -143,7 +143,7 @@ def make_decision_tree(training_data, bagged_values):
 T = [1, 2, 5, 10, 25]
 trees = []
 temp = range(57)
-for t in T:
+for t in [25]:
     while len(trees) < t:
         bagged_values = [] #making a random tree every time
         for m in range(0,57):
@@ -155,7 +155,6 @@ for t in T:
         tally = [tree.follow(val_features[i]) for tree in trees]
         result = Counter(tally).most_common(1)[0][0]
         if result != int(val_labels[i]):
-            print result
             count += 1
     print "you fucked up  with T of ", str(t), "and a percentage of ", float(count)/len(val_features)
 
