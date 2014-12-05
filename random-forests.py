@@ -125,23 +125,21 @@ def make_decision_tree(training_data, bagged_values):
     tree.set_feature(feature)
     bagged_values.remove(feature)
     left_training_data = [x for x in training_data if x[0][feature] <= threshold]
+    left_training_labels = [x[1] for x in training_data if x[0][feature] <= threshold]
     right_training_data = [x for x in training_data if x[0][feature] > threshold]
+    right_training_labels = [x[1] for x in training_data if x[0][feature] > threshold]
     if len(left_training_data) == 0:
-        if sum(labels) > training_data_length/2.0:
-            tree.set_value(1)
-            return tree
+        if sum(right_training_labels) > len(right_training_labels)/2.0:
+            tree.left = DecisionTree(0)
         else:
-            tree.set_value(0)
-            return tree
-        # tree.right = make_decision_tree(right_training_data, bagged_values)
+            tree.left = DecisionTree(1)
+        tree.right = make_decision_tree(right_training_data, bagged_values)
     elif len(right_training_data) == 0:
-        if sum(labels) > training_data_length/2.0:
-            tree.set_value(1)
-            return tree
+        if sum(left_training_labels) > len(left_training_labels)/2.0:
+            tree.right = DecisionTree(0)
         else:
-            tree.set_value(0)
-            return tree
-        # tree.left = make_decision_tree(left_training_data <= threshold], bagged_values)
+            tree.right = DecisionTree(1)
+        tree.left = make_decision_tree(left_training_data, bagged_values)
     else:
         tree.left = make_decision_tree(left_training_data, bagged_values)
         tree.right = make_decision_tree(right_training_data, bagged_values)
@@ -150,7 +148,7 @@ def make_decision_tree(training_data, bagged_values):
 T = [1, 2, 5, 10, 25]
 trees = []
 temp = range(57)
-for t in [25]:
+for t in [2]:
     while len(trees) < t:
         bagged_values = [] #making a random tree every time
         for m in range(0,57):
@@ -162,6 +160,7 @@ for t in [25]:
         tally = [tree.follow(val_features[i]) for tree in trees]
         result = Counter(tally).most_common(1)[0][0]
         if result != int(val_labels[i]):
+            print result
             count += 1
     print "you fucked up  with T of", str(t), "and a percentage of ", float(count)/len(val_features)
 
