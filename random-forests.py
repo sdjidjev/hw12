@@ -130,15 +130,15 @@ def make_decision_tree(training_data, bagged_values):
     right_training_labels = [x[1] for x in training_data if x[0][feature] > threshold]
     if len(left_training_data) == 0:
         if sum(right_training_labels) > len(right_training_labels)/2.0:
-            tree.left = DecisionTree(0)
-        else:
             tree.left = DecisionTree(1)
+        else:
+            tree.left = DecisionTree(0)
         tree.right = make_decision_tree(right_training_data, bagged_values)
     elif len(right_training_data) == 0:
         if sum(left_training_labels) > len(left_training_labels)/2.0:
-            tree.right = DecisionTree(0)
-        else:
             tree.right = DecisionTree(1)
+        else:
+            tree.right = DecisionTree(0)
         tree.left = make_decision_tree(left_training_data, bagged_values)
     else:
         tree.left = make_decision_tree(left_training_data, bagged_values)
@@ -148,20 +148,20 @@ def make_decision_tree(training_data, bagged_values):
 T = [1, 2, 5, 10, 25]
 trees = []
 temp = range(57)
-for t in [2]:
-    while len(trees) < t:
-        bagged_values = [] #making a random tree every time
-        for m in range(0,57):
-            bagged_values.append(random.choice(temp)) #bagging values, get rid of them
-        print "Making a tree"
-        trees.append(make_decision_tree(train_features_zipped, bagged_values))
-    count = 0
-    for i in range(len(val_features)):
-        tally = [tree.follow(val_features[i]) for tree in trees]
-        result = Counter(tally).most_common(1)[0][0]
-        if result != int(val_labels[i]):
-            print result
-            count += 1
-    print "you fucked up  with T of", str(t), "and a percentage of ", float(count)/len(val_features)
+for mmm in range(0,4):
+    for t in [25]:
+        while len(trees) < t:
+            bagged_values = [] #making a random tree every time
+            for m in range(0,57):
+                bagged_values.append(random.choice(temp)) #bagging values, get rid of them
+            # print "Making a tree"
+            trees.append(make_decision_tree(train_features_zipped, bagged_values))
+        count = 0
+        for i in range(len(val_features)):
+            tally = [tree.follow(val_features[i]) for tree in trees]
+            result = Counter(tally).most_common(1)[0][0]
+            if result != int(val_labels[i]):
+                count += 1
+        print "you fucked up  with T of", str(t), "and a percentage of ", float(count)/len(val_features)
 
 
