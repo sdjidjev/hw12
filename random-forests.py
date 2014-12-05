@@ -6,7 +6,7 @@ class DecisionTree:
         self.right = None
         self.threshold = None
         self.feature = None
-        self.value = None
+        self.value = value
     def set_feature(self, feature):
         self.feature = feature
     def set_threshold(self, threshold):
@@ -39,6 +39,7 @@ f = open('hw12data/emailDataset/trainFeatures.csv', 'r')
 f1 = open('hw12data/emailDataset/trainLabels.csv', 'r')
 f2 = open('hw12data/emailDataset/valFeatures.csv', 'r')
 f3 = open('hw12data/emailDataset/valLabels.csv', 'r')
+f4 = open('hw12data/emailDataset/testFeatures.csv', 'r')
 train_features = f.read().splitlines()
 train_labels = f1.read().splitlines()
 train_labels = map(lambda x: int(x), train_labels)
@@ -46,6 +47,8 @@ train_features = [map(lambda y: float(y), x.split(',')) for x in train_features]
 val_features = f2.read().splitlines()
 val_features = [map(lambda y: float(y), x.split(',')) for x in val_features]
 val_labels = f3.read().splitlines()
+test_features = f4.read().splitlines()
+test_features = [map(lambda y: float(y), x.split(',')) for x in test_features]
 train_features_zipped = zip(train_features, train_labels)
 
 def entropy(labels):
@@ -77,10 +80,13 @@ def best_feature(training_data, features):
     return best_feature, best_threshold #changed it to best_threshold
 
 def find_me_a_threshold(sorted_feature, training_data, feature): #what if everything is all 1s or 0s; len(sorted_feature) == 1?
+    # print feature
     best_goodness = -float("inf")
     best_threshold = 0
     labels = [x[1] for x in training_data]
     curr_entropy = entropy(labels)
+    # print curr_entropy
+    # print "-------------------"
     for i in range(0,len(sorted_feature)):
         if i == len(sorted_feature)-1:
             float(sorted_feature[i])
@@ -93,12 +99,10 @@ def find_me_a_threshold(sorted_feature, training_data, feature): #what if everyt
                 left.append(label)
             else:
                 right.append(label)
-        goodness = curr_entropy - ((len(left)/len(training_data))*entropy(left) + (len(right)/len(training_data))*entropy(right)) #length of the sorted features instead of training_data
+        goodness = curr_entropy - ((len(left)/float(len(training_data)))*entropy(left) + (len(right)/float(len(training_data)))*entropy(right)) #length of the sorted features instead of training_data
         if goodness > best_goodness:
             best_goodness = goodness
             best_threshold = threshold
-    if best_goodness == -float("inf"):
-        print "ASFHIDFJasidhfasjfaskjhgdfaowefbask"
     return best_threshold, best_goodness 
 
 def make_decision_tree(training_data, bagged_values):
@@ -130,15 +134,15 @@ def make_decision_tree(training_data, bagged_values):
     right_training_labels = [x[1] for x in training_data if x[0][feature] > threshold]
     if len(left_training_data) == 0:
         if sum(right_training_labels) > len(right_training_labels)/2.0:
-            tree.left = DecisionTree(1)
-        else:
             tree.left = DecisionTree(0)
+        else:
+            tree.left = DecisionTree(1)
         tree.right = make_decision_tree(right_training_data, bagged_values)
     elif len(right_training_data) == 0:
         if sum(left_training_labels) > len(left_training_labels)/2.0:
-            tree.right = DecisionTree(1)
-        else:
             tree.right = DecisionTree(0)
+        else:
+            tree.right = DecisionTree(1)
         tree.left = make_decision_tree(left_training_data, bagged_values)
     else:
         tree.left = make_decision_tree(left_training_data, bagged_values)
@@ -146,22 +150,33 @@ def make_decision_tree(training_data, bagged_values):
     return tree
 
 T = [1, 2, 5, 10, 25]
-trees = []
 temp = range(57)
-for mmm in range(0,4):
-    for t in [25]:
-        while len(trees) < t:
-            bagged_values = [] #making a random tree every time
-            for m in range(0,57):
-                bagged_values.append(random.choice(temp)) #bagging values, get rid of them
-            # print "Making a tree"
-            trees.append(make_decision_tree(train_features_zipped, bagged_values))
-        count = 0
-        for i in range(len(val_features)):
-            tally = [tree.follow(val_features[i]) for tree in trees]
+for t in T:
+    trees=[]
+    while len(trees) < t:
+        bagged_values = [] #making a random tree every time
+        for m in range(0,57):
+            bagged_values.append(random.choice(temp)) #bagging values, get rid of them
+        trees.append(make_decision_tree(train_features_zipped, bagged_values))
+    count = 0
+    f5 = open("emailOutput"+str(t)+".csv","w")
+    for i in range(len(val_features)):
+        tally = [tree.follow(val_features[i]) for tree in trees]
+        result = Counter(tally).most_common(1)[0][0]
+        f5.write(str(result)+"\n")
+        if result != int(val_labels[i]):
+            count += 1
+    f5.close()
+    if t == 25:
+        f6 = open("emailOutput.csv","w")
+        for i in range(len(test_features)):
+            tally = [tree.follow(test_features[i]) for tree in trees]
             result = Counter(tally).most_common(1)[0][0]
-            if result != int(val_labels[i]):
-                count += 1
-        print "you fucked up  with T of", str(t), "and a percentage of ", float(count)/len(val_features)
-
-
+            f6.write(str(result)+"\n")
+    print "Error rate for T of", str(t), "is:", float(count)/len(val_features)
+f.close()
+f1.close()
+f2.close()
+f3.close()
+f4.close()
+f6.close()
