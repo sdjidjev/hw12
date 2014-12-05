@@ -1,7 +1,7 @@
 import math, random
 from collections import Counter
 class DecisionTree:
-    def __init__(self):
+    def __init__(self,value=None):
         self.left = None
         self.right = None
         self.threshold = None
@@ -20,7 +20,7 @@ class DecisionTree:
         self.right = tree
         return self.right
     def decision(self, feature):
-        if feature > self.threshold: #changed to less than
+        if feature > self.threshold: #changed to greater than
             return self.right
         return self.left
     @property
@@ -93,10 +93,12 @@ def find_me_a_threshold(sorted_feature, training_data, feature): #what if everyt
                 left.append(label)
             else:
                 right.append(label)
-        goodness = curr_entropy - (len(left)/len(sorted_feature)*entropy(left) + len(right)/len(sorted_feature)*entropy(right)) #length of the sorted features instead of training_data
+        goodness = curr_entropy - ((len(left)/len(training_data))*entropy(left) + (len(right)/len(training_data))*entropy(right)) #length of the sorted features instead of training_data
         if goodness > best_goodness:
             best_goodness = goodness
             best_threshold = threshold
+    if best_goodness == -float("inf"):
+        print "ASFHIDFJasidhfasjfaskjhgdfaowefbask"
     return best_threshold, best_goodness 
 
 def make_decision_tree(training_data, bagged_values):
@@ -122,22 +124,27 @@ def make_decision_tree(training_data, bagged_values):
     tree.set_threshold(threshold)
     tree.set_feature(feature)
     bagged_values.remove(feature)
-    if len([x for x in training_data if x[0][feature] <= threshold]) == 0:
+    left_training_data = [x for x in training_data if x[0][feature] <= threshold]
+    right_training_data = [x for x in training_data if x[0][feature] > threshold]
+    if len(left_training_data) == 0:
         if sum(labels) > training_data_length/2.0:
             tree.set_value(1)
             return tree
         else:
             tree.set_value(0)
             return tree
-    elif len([x for x in training_data if x[0][feature] > threshold]) == 0:
+        # tree.right = make_decision_tree(right_training_data, bagged_values)
+    elif len(right_training_data) == 0:
         if sum(labels) > training_data_length/2.0:
             tree.set_value(1)
             return tree
         else:
             tree.set_value(0)
             return tree
-    tree.left = make_decision_tree([x for x in training_data if x[0][feature] <= threshold], bagged_values)
-    tree.right = make_decision_tree([x for x in training_data if x[0][feature] > threshold], bagged_values)
+        # tree.left = make_decision_tree(left_training_data <= threshold], bagged_values)
+    else:
+        tree.left = make_decision_tree(left_training_data, bagged_values)
+        tree.right = make_decision_tree(right_training_data, bagged_values)
     return tree
 
 T = [1, 2, 5, 10, 25]
@@ -156,6 +163,6 @@ for t in [25]:
         result = Counter(tally).most_common(1)[0][0]
         if result != int(val_labels[i]):
             count += 1
-    print "you fucked up  with T of ", str(t), "and a percentage of ", float(count)/len(val_features)
+    print "you fucked up  with T of", str(t), "and a percentage of ", float(count)/len(val_features)
 
 
