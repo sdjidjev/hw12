@@ -1,0 +1,14 @@
+Error rate for T of 1 is: 0.254
+Error rate for T of 2 is: 0.166
+Error rate for T of 5 is: 0.188
+Error rate for T of 10 is: 0.102
+Error rate for T of 25 is: 0.1
+
+Our best value of T is 25.
+
+We didn't use any tie breakers. This is because it's not clear what feature is the best, so we just rely on whatever has the highest goodness metric so far.
+
+We stopped when we were out of features or examples or if all the labels were the same in the training data.
+
+We didn't deviate from the method suggested too much, but we didn't incorporate depth when determing when to stop building the tree. 
+

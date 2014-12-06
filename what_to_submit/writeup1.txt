@@ -1,0 +1,13 @@
+For k = 1, error rate was: 0.089
+For k = 2, error rate was: 0.089
+For k = 5, error rate was: 0.087
+For k = 10, error rate was: 0.109
+For k = 25, error rate was: 0.128
+
+For us, k=5 had the best error rate.
+
+The tie breaker will take all labels with the same tally as the most tallied, and find the shortest distance to our current data point for each label. It then picks the label with the shortest distance to our current data point.
+
+For us, the results for k = 1,2 were not significantly different. We think this is because there's not much chance in k=2 for a new majority to take over the shortest distance.
+
+Number of continuous black pixels with a white enclosure around it (island) could possibly help us better classify things. For example, the "valDigit108.png" is a 9, and has 1 islands. However, our algorithm (when k=1) classified it as a 3, which has no islands. Our algorithm probably thought this digit was a 3 because this digit's tail is drawn horizontally, (which is like how 3's tail is usually drawn). Most of the other 9's in the training set had tails that were drawn (for the most part) vertically. We could also look at the size of each of these islands. For instance, even though "valDigit108.png" is a 9, our algorithm (when k=5) labeled it as a "0". Even though 0 and 9 have the same number of islands, 0 will usually have a larger size of an island than 9 will have. One final feature we could look at is how many strokes a digit has. For example, "valDigit284.png" is actually a 7, but our algorithm classified it as a "1". In this data set, 1's are drawn with one stroke, but some 7's are drawn with the extra stroke in the middle.
