@@ -1,12 +1,12 @@
 import math, random
 from collections import Counter
 class DecisionTree:
-    def __init__(self):
+    def __init__(self,value=None):
         self.left = None
         self.right = None
         self.threshold = None
         self.feature = None
-        self.value = None
+        self.value = value
     def set_feature(self, feature):
         self.feature = feature
     def set_threshold(self, threshold):
@@ -20,7 +20,7 @@ class DecisionTree:
         self.right = tree
         return self.right
     def decision(self, feature):
-        if feature >= self.threshold:
+        if feature > self.threshold: #changed to greater than
             return self.right
         return self.left
     @property
@@ -39,6 +39,7 @@ f = open('hw12data/emailDataset/trainFeatures.csv', 'r')
 f1 = open('hw12data/emailDataset/trainLabels.csv', 'r')
 f2 = open('hw12data/emailDataset/valFeatures.csv', 'r')
 f3 = open('hw12data/emailDataset/valLabels.csv', 'r')
+f4 = open('hw12data/emailDataset/testFeatures.csv', 'r')
 train_features = f.read().splitlines()
 train_labels = f1.read().splitlines()
 train_labels = map(lambda x: int(x), train_labels)
@@ -46,6 +47,8 @@ train_features = [map(lambda y: float(y), x.split(',')) for x in train_features]
 val_features = f2.read().splitlines()
 val_features = [map(lambda y: float(y), x.split(',')) for x in val_features]
 val_labels = f3.read().splitlines()
+test_features = f4.read().splitlines()
+test_features = [map(lambda y: float(y), x.split(',')) for x in test_features]
 train_features_zipped = zip(train_features, train_labels)
 
 def entropy(labels):
@@ -77,10 +80,13 @@ def best_feature(training_data, features):
     return best_feature, best_threshold #changed it to best_threshold
 
 def find_me_a_threshold(sorted_feature, training_data, feature): #what if everything is all 1s or 0s; len(sorted_feature) == 1?
+    # print feature
     best_goodness = -float("inf")
     best_threshold = 0
     labels = [x[1] for x in training_data]
     curr_entropy = entropy(labels)
+    # print curr_entropy
+    # print "-------------------"
     for i in range(0,len(sorted_feature)):
         if i == len(sorted_feature)-1:
             float(sorted_feature[i])
@@ -93,7 +99,7 @@ def find_me_a_threshold(sorted_feature, training_data, feature): #what if everyt
                 left.append(label)
             else:
                 right.append(label)
-        goodness = curr_entropy - (len(left)/len(sorted_feature)*entropy(left) + len(right)/len(sorted_feature)*entropy(right)) #length of the sorted features instead of training_data
+        goodness = curr_entropy - ((len(left)/float(len(training_data)))*entropy(left) + (len(right)/float(len(training_data)))*entropy(right)) #length of the sorted features instead of training_data
         if goodness > best_goodness:
             best_goodness = goodness
             best_threshold = threshold
@@ -122,41 +128,55 @@ def make_decision_tree(training_data, bagged_values):
     tree.set_threshold(threshold)
     tree.set_feature(feature)
     bagged_values.remove(feature)
-    if len([x for x in training_data if x[0][feature] <= threshold]) == 0:
-        if sum(labels) > training_data_length/2.0:
-            tree.set_value(1)
-            return tree
+    left_training_data = [x for x in training_data if x[0][feature] <= threshold]
+    left_training_labels = [x[1] for x in training_data if x[0][feature] <= threshold]
+    right_training_data = [x for x in training_data if x[0][feature] > threshold]
+    right_training_labels = [x[1] for x in training_data if x[0][feature] > threshold]
+    if len(left_training_data) == 0:
+        if sum(right_training_labels) > len(right_training_labels)/2.0:
+            tree.left = DecisionTree(0)
         else:
-            tree.set_value(0)
-            return tree
-    elif len([x for x in training_data if x[0][feature] > threshold]) == 0:
-        if sum(labels) > training_data_length/2.0:
-            tree.set_value(1)
-            return tree
+            tree.left = DecisionTree(1)
+        tree.right = make_decision_tree(right_training_data, bagged_values)
+    elif len(right_training_data) == 0:
+        if sum(left_training_labels) > len(left_training_labels)/2.0:
+            tree.right = DecisionTree(0)
         else:
-            tree.set_value(0)
-            return tree
-    tree.left = make_decision_tree([x for x in training_data if x[0][feature] <= threshold], bagged_values)
-    tree.right = make_decision_tree([x for x in training_data if x[0][feature] > threshold], bagged_values)
+            tree.right = DecisionTree(1)
+        tree.left = make_decision_tree(left_training_data, bagged_values)
+    else:
+        tree.left = make_decision_tree(left_training_data, bagged_values)
+        tree.right = make_decision_tree(right_training_data, bagged_values)
     return tree
 
 T = [1, 2, 5, 10, 25]
-trees = []
 temp = range(57)
 for t in T:
+    trees=[]
     while len(trees) < t:
         bagged_values = [] #making a random tree every time
         for m in range(0,57):
             bagged_values.append(random.choice(temp)) #bagging values, get rid of them
-        print "Making a tree"
         trees.append(make_decision_tree(train_features_zipped, bagged_values))
     count = 0
+    f5 = open("emailOutput"+str(t)+".csv","w")
     for i in range(len(val_features)):
         tally = [tree.follow(val_features[i]) for tree in trees]
         result = Counter(tally).most_common(1)[0][0]
+        f5.write(str(result)+"\n")
         if result != int(val_labels[i]):
-            print result
             count += 1
-    print "you fucked up  with T of ", str(t), "and a percentage of ", float(count)/len(val_features)
-
-
+    f5.close()
+    if t == 25:
+        f6 = open("emailOutput.csv","w")
+        for i in range(len(test_features)):
+            tally = [tree.follow(test_features[i]) for tree in trees]
+            result = Counter(tally).most_common(1)[0][0]
+            f6.write(str(result)+"\n")
+    print "Error rate for T of", str(t), "is:", float(count)/len(val_features)
+f.close()
+f1.close()
+f2.close()
+f3.close()
+f4.close()
+f6.close()
