@@ -40,23 +40,8 @@ def tally_votes(distance_array):
 		for i in distance_array:
 			if i[1] in most:
 				return i
-			print "poot."
 	return foo(most)[1]
 
-# f8 = open("writeup1.txt", "w")
-# for i in k:
-# 	counter = 0.0
-# 	f4 = open("digitsOutput"+str(i)+".csv","w")
-# 	for j in range(0,len(val_features)):
-# 		classy =  classify(val_features[j],i)
-# 		f4.write(str(classy)+"\n")
-# 		if classy != val_labels[j]:
-# 			counter += 1.0
-# 			print "Oops: "+str(j+1)
-# 	f4.close()
-# 	print "For k = "+str(i)+", error rate was: "+str(counter/float(len(val_features)))
-# 	f8.write("For k = "+str(i)+", error rate was: "+str(counter/float(len(val_features)))+"\n")
-# f8.close()
 
 for j in range(0,len(test_features)):
 	classy =  classify(test_features[j],5)
